@@ -1,0 +1,102 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: apiwatcher-postgres
+    environment:
+      POSTGRES_DB: apiwatcher
+      POSTGRES_USER: api
+      POSTGRES_PASSWORD: api
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - apiwatcher-network
+
+  mongodb:
+    image: mongo:7
+    container_name: apiwatcher-mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - apiwatcher-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: apiwatcher-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - apiwatcher-network
+
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    container_name: apiwatcher-zookeeper
+    environment:
+      ALLOW_ANONYMOUS_LOGIN: yes
+    ports:
+      - "2181:2181"
+    networks:
+      - apiwatcher-network
+
+  kafka:
+    image: bitnami/kafka:latest
+    container_name: apiwatcher-kafka
+    environment:
+      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      ALLOW_PLAINTEXT_LISTENER: yes
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    networks:
+      - apiwatcher-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: apiwatcher-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    networks:
+      - apiwatcher-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: apiwatcher-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+    networks:
+      - apiwatcher-network
+
+volumes:
+  postgres_data:
+  mongo_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  apiwatcher-network:
+    driver: bridge

@@ -1,0 +1,2 @@
+-- Tabela criada automaticamente pelo Hibernate
+-- Ver: MonitoredApiEntity.java (@Table(name = "monitored_apis"))

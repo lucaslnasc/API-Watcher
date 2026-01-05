@@ -1,0 +1,66 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# VS Code
+.vscode/
+.factorypath
+
+# Spring Boot
+application-local.yml
+application-*.properties
+!application.properties
+!application.yml
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Docker volumes (não sobe dados dos containers)
+docker/data/
+*_data/
+
+# Dados sensíveis (NÃO COMITAR)
+.env
+*.key
+*.pem
+secrets/
+
+# Build temporários
+*.class
+*.jar
+*.war
+*.ear
+
+# Backup files
+*.bak
+*.tmp
+*~.nib

@@ -1,0 +1,84 @@
+spring:
+  application:
+    name: api-watcher
+
+  profiles:
+    active: dev
+
+  datasource:
+    url: jdbc:postgresql://localhost:5433/apiwatcher
+    username: api
+    password: api
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  data:
+    mongodb:
+      uri: mongodb://admin:admin@localhost:27017/apiwatcher?authSource=admin
+
+    redis:
+      host: localhost
+      port: 6379
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+      group-id: api-watcher-group
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      apiHealthCheck:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 60s
+
+  retry:
+    instances:
+      apiHealthCheck:
+        maxAttempts: 3
+        waitDuration: 1s
+
+logging:
+  level:
+    com.apiwatcher: DEBUG
+    org.springframework.kafka: INFO
+    org.springframework.data.mongodb: DEBUG
+
+# Configuração do Scheduler de Health Check
+scheduler:
+  health-check:
+    fixed-rate: 60000 # 60 segundos (em milissegundos)
+    initial-delay: 5000 # Aguarda 5 segundos antes de iniciar
