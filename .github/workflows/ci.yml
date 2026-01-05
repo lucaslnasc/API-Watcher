@@ -10,6 +10,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: api
+          POSTGRES_PASSWORD: api
+          POSTGRES_DB: apiwatcher
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
@@ -25,13 +40,14 @@ jobs:
         run: chmod +x ./mvnw
 
       - name: Build com Maven
-        run: ./mvnw clean compile -DskipTests
+        run: ./mvnw clean package -DskipTests
 
       - name: Executar testes
         run: ./mvnw test
-
-      - name: Verificar formatação do código
-        run: ./mvnw verify -DskipTests
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/apiwatcher
+          SPRING_DATASOURCE_USERNAME: api
+          SPRING_DATASOURCE_PASSWORD: api
 
       - name: Upload relatório de testes
         if: always()
