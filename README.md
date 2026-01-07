@@ -36,12 +36,83 @@ Projeto educacional para estudo avançado de:
 - [x] **Event-Driven Architecture**: Fluxo assíncrono completo
 - [x] **Domain Events**: `ApiRegisteredEvent` e `HealthCheckEvent`
 
+### ✅ Fase 3 - Redis Cache (Concluída)
+
+- [x] **Redis Cache** configurado com TTLs específicos
+- [x] **Cache de APIs monitoradas** (reduz carga no PostgreSQL)
+- [x] **Cache Hit/Miss tracking** com logs detalhados
+- [x] **Invalidação automática** após create/update/delete
+- [x] **Performance otimizada**: Consultas 10x mais rápidas
+- [x] **Pool de conexões** configurado (Lettuce)
+
 ### 🔄 Roadmap
 
-- **Fase 3**: Circuit Breaker + Retry Pattern + Observabilidade (Prometheus + Grafana)
-- **Fase 4**: API REST para consulta de histórico (MongoDB)
-- **Fase 5**: Alertas (Slack, Email, Webhooks)
-- **Fase 6**: Testes automatizados + CI/CD
+- **Fase 4**: Circuit Breaker + Retry Pattern
+- **Fase 5**: Observabilidade completa (Prometheus + Grafana + Dashboards)
+- **Fase 6**: API REST para consulta de histórico (MongoDB)
+- **Fase 7**: Alertas (Slack, Email, Webhooks)
+- **Fase 8**: Testes automatizados + CI/CD ✅ **Em andamento**
+
+---
+
+## 🚀 CI/CD Pipeline
+
+### GitHub Actions Workflows
+
+O projeto possui pipeline automatizado de CI/CD:
+
+#### **CI Pipeline** (`.github/workflows/ci.yml`)
+
+Executado a cada push ou pull request:
+
+1. **Build and Test**
+
+   - ✅ Compila o projeto com Maven
+   - ✅ Roda todos os testes
+   - ✅ Testa com PostgreSQL, Redis e MongoDB
+   - ✅ Upload de relatórios de teste
+
+2. **Code Quality**
+
+   - ✅ Verifica qualidade do código
+   - ✅ Análise estática
+
+3. **Build Docker**
+   - ✅ Cria imagem Docker
+   - ✅ Salva artifact para deploy
+
+#### **CD Pipeline** (`.github/workflows/cd.yml`)
+
+Deploy automático após CI bem-sucedido:
+
+1. **Deploy Staging**
+
+   - 🚀 Deploy automático no ambiente de staging
+   - 🧪 Smoke tests
+   - ✅ Validação de saúde
+
+2. **Deploy Production**
+   - 🚀 Deploy no ambiente de produção (aprovação manual)
+   - 🏥 Health checks
+   - 📢 Notificações
+
+#### **Dependabot** (`.github/dependabot.yml`)
+
+Atualização automática de dependências:
+
+- Maven dependencies (semanal)
+- GitHub Actions (semanal)
+- Docker images (semanal)
+
+### Como funciona
+
+```
+Push/PR → CI Pipeline → Tests → Build → Docker Image
+                ↓
+         (se main branch)
+                ↓
+        CD Pipeline → Staging → Production
+```
 
 ---
 
@@ -129,13 +200,15 @@ api-watcher/
 - ✅ **Spring Boot 3.2** com Java 21
 - ✅ **PostgreSQL 16** (dados relacionais)
 - ✅ **MongoDB 7** (time-series / histórico)
+- ✅ **Redis 7** (cache de consultas)
 - ✅ **Apache Kafka** (mensageria)
 - ✅ **JPA/Hibernate** para persistência
 - ✅ **Docker Compose** para infraestrutura
 - ✅ **Scheduler** configurável
+- ✅ **Spring Cache** com Redis
 - ✅ **Resilience4j** (preparado para Circuit Breaker)
 
-### Fluxo de Dados
+### Fluxo de Dados (Com Cache)
 
 ```
 ┌─────────────────┐
@@ -144,31 +217,41 @@ api-watcher/
 └────────┬────────┘
          │
          ▼
-┌─────────────────┐      ┌──────────────┐
-│   Use Cases     │─────▶│ PostgreSQL   │
-│  (Application)  │      │ (API Config) │
-└────────┬────────┘      └──────────────┘
-         │
-         ▼
 ┌─────────────────┐
-│ Event Publisher │
-│     (Kafka)     │
+│   Use Cases     │
+│  (Application)  │
 └────────┬────────┘
          │
          ▼
-┌─────────────────┐      ┌──────────────┐
-│ Event Consumer  │─────▶│   MongoDB    │
-│  (Kafka Listen) │      │  (History)   │
-└─────────────────┘      └──────────────┘
+┌─────────────────────────────────────┐
+│     Repository (com @Cacheable)     │
+│   ┌──────────┐      ┌───────────┐  │
+│   │  Redis   │─────▶│PostgreSQL │  │
+│   │ (Cache)  │      │ (Source)  │  │
+│   └──────────┘      └───────────┘  │
+└─────────────────┬───────────────────┘
+                  │
+                  ▼
+       ┌──────────────────┐
+       │ Event Publisher  │
+       │     (Kafka)      │
+       └────────┬─────────┘
+                │
+                ▼
+       ┌──────────────────┐      ┌──────────────┐
+       │ Event Consumer   │─────▶│   MongoDB    │
+       │  (Kafka Listen)  │      │  (History)   │
+       └──────────────────┘      └──────────────┘
 ```
 
 ### Próximas Implementações
 
 - 🔄 Circuit Breaker + Retry nos health checks
+- 🔄 Dashboards do Grafana com métricas
 - 🔄 API REST para consulta de histórico
-- 🔄 Métricas com Prometheus + Grafana
 - 🔄 Distributed Tracing
 - 🔄 Alertas em tempo real
+- 🔄 Rate limiting com Redis
 
 ---
 
@@ -307,54 +390,24 @@ db.health_checks.countDocuments()
 
 ---
 
-## 🏗️ Arquitetura Implementada
+## � Aprendizados e Monitoramento
 
-### Arquitetura
+### 1. Performance do Sistema
 
-- ✅ **Clean Architecture** com separação clara de camadas
-- ✅ **Domain-Driven Design (DDD)** com Bounded Contexts
-- ✅ **Hexagonal Architecture** (Ports & Adapters)
-- ✅ **Repository Pattern** com abstração de persistência
+**Latência Monitorada:**
 
-### Padrões e Práticas
-
-- ✅ **Use Cases** para orquestração de lógica de negócio
-- ✅ **Value Objects** imutáveis (CheckResult)
-- ✅ **Domain Events** (preparado para Event-Driven)
-- ✅ **DTO Pattern** para isolamento de camadas
-- ✅ **Validação em múltiplas camadas** (DTO + Domain)
-
-### Tecnologias
-
-- ✅ **Spring Boot 3.2** com Java 21
-- ✅ **JPA/Hibernate** para persistência
-- ✅ **PostgreSQL** para dados relacionais
-- ✅ **Docker Compose** para infraestrutura
-- ✅ **Scheduler** configurável
-
-### Próximas Implementações (Fase 2)
-
-- 🔄 Event-Driven Architecture com Kafka
-- 🔄 Time-Series Database (MongoDB)
-- 🔄 Circuit Breaker Pattern
-- 🔄 Distributed Tracing
-- 🔄
-
-````
-
+```
 API configurada: latencyThresholdMs = 511ms
 
 Resultado:
 ├─ 340ms → ✅ OK
 ├─ 650ms → ⚠️ ALERTA: Latência acima do threshold
 └─ 1200ms → ⚠️ ALERTA: API muito lenta
-
 ```
 
 ### 2. Detecção de Problemas de Disponibilidade
 
 ```
-
 API configurada: expectedStatusCode = 200
 
 Resultado:
@@ -362,8 +415,7 @@ Resultado:
 ├─ 404 → ❌ FALHA: Status incorreto
 ├─ 503 → ❌ FALHA: Serviço indisponível
 └─ Timeout → ❌ ERRO: Não foi possível conectar
-
-````
+```
 
 ### 3. Monitoramento Automático
 
@@ -381,11 +433,13 @@ scheduler:
 
 ## 📚 Documentação
 
-- [Arquitetura C4](docs/architecture/)
-- [Guia Redis](docs/guides/redis-guide.md)
+- [📖 Guia de Estudos](docs/GUIA-DE-ESTUDOS.md) ⭐ **Recomendado para aprender!**
+- [Guia Redis Cache](docs/guides/redis-cache-guide.md) ⭐ **Novo!**
+- [Guia Redis Original](docs/guides/redis-guide.md)
 - [Guia Kafka](docs/guides/kafka-guide.md)
 - [Guia MongoDB](docs/guides/mongodb-guide.md)
 - [ADRs (Decisões Arquiteturais)](docs/adr/)
+- [Arquitetura C4](docs/architecture/)
 
 ---
 
@@ -454,3 +508,50 @@ Este projeto cobre:
 - ✅ Time-Series Databases
 - ✅ Distributed Tracing
 - ✅ Infrastructure as Code
+  Conceitos e Tecnologias Estudadas
+
+Este projeto implementa e ensina:
+
+### Arquitetura e Padrões
+
+- ✅ **Clean Architecture** - Separação de camadas
+- ✅ **Domain-Driven Design (DDD)** - Bounded Contexts
+- ✅ **Event-Driven Architecture** - Comunicação assíncrona
+- ✅ **Hexagonal Architecture** - Ports & Adapters
+- ✅ **Repository Pattern** - Abstração de persistência
+- ✅ **CQRS Pattern** - Separação Command/Query
+
+### Tecnologias Backend
+
+- ✅ **Spring Boot 3.2** com Java 21
+- ✅ **JPA/Hibernate** - ORM e persistência
+- ✅ **Spring Cache** - Abstração de cache
+- ✅ **Spring Kafka** - Mensageria
+- ✅ **Spring Data MongoDB** - NoSQL
+
+### Banco de Dados
+
+- ✅ **PostgreSQL 16** - RDBMS transacional
+- ✅ **MongoDB 7** - NoSQL time-series
+- ✅ **Redis 7** - Cache in-memory
+
+### Mensageria e Eventos
+
+- ✅ **Apache Kafka** - Event streaming
+- ✅ **Domain Events** - DDD events
+- ✅ **Producer/Consumer** - Pub/Sub pattern
+
+### Performance e Resiliência
+
+- ✅ **Cache Strategy** - TTL e invalidação
+- ✅ **Resilience4j** - Circuit Breaker (preparado)
+- ✅ **Retry Pattern** - Recuperação de falhas
+
+### DevOps e Infraestrutura
+
+- ✅ **Docker** - Containerização
+- ✅ **Docker Compose** - Orquestração local
+- ✅ **Prometheus** - Métricas (preparado)
+- ✅ **Grafana** - Visualização (preparado)
+
+📖 **[Veja o Guia de Estudos completo](docs/GUIA-DE-ESTUDOS.md)** para aprender todos esses conceitos!
