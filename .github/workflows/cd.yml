@@ -1,5 +1,8 @@
 name: CD - Deploy
 
+# CD desabilitado temporariamente - requer configuração de infraestrutura
+# Para habilitar: remova a linha "if: false" nos jobs abaixo
+
 on:
   workflow_run:
     workflows: ["CI/CD Pipeline"]
@@ -11,7 +14,7 @@ jobs:
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: false  # Desabilitado - remova esta linha para habilitar
     environment:
       name: staging
       url: https://staging.api-watcher.example.com
@@ -55,7 +58,7 @@ jobs:
     name: Deploy to Production
     runs-on: ubuntu-latest
     needs: deploy-staging
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: false  # Desabilitado - remova esta linha para habilitar
     environment:
       name: production
       url: https://api-watcher.example.com
