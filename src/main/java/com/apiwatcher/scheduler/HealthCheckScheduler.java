@@ -25,13 +25,13 @@ public class HealthCheckScheduler {
    */
   @Scheduled(fixedRateString = "${scheduler.health-check.fixed-rate}", initialDelayString = "${scheduler.health-check.initial-delay}")
   public void executeHealthCheck() {
-    logger.info("🔍 Iniciando health check periódico das APIs...");
+    logger.info("[SCHEDULER] Iniciando health check periodico das APIs...");
 
     try {
       executeHealthCheckUseCase.execute();
-      logger.info("✅ Health check periódico concluído com sucesso");
+      logger.info("[SCHEDULER] Health check periodico concluido");
     } catch (Exception e) {
-      logger.error("❌ Erro ao executar health check periódico: {}", e.getMessage(), e);
+      logger.error("[SCHEDULER-ERROR] Erro ao executar health check periodico: {}", e.getMessage(), e);
     }
   }
 }

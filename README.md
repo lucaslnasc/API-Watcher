@@ -27,12 +27,21 @@ Projeto educacional para estudo avançado de:
 - [x] **Arquitetura DDD** com Bounded Contexts
 - [x] **REST API** completa para gestão
 
+### ✅ Fase 2 - Event-Driven Architecture (Concluída)
+
+- [x] **Apache Kafka** configurado e funcionando
+- [x] **Producer**: Publicação de eventos (API cadastrada, Health check)
+- [x] **Consumer**: Consumo e processamento de eventos
+- [x] **MongoDB Time-Series**: Histórico completo de eventos
+- [x] **Event-Driven Architecture**: Fluxo assíncrono completo
+- [x] **Domain Events**: `ApiRegisteredEvent` e `HealthCheckEvent`
+
 ### 🔄 Roadmap
 
-- **Fase 2**: Event-Driven (Kafka) + Histórico (MongoDB) + Circuit Breaker
-- **Fase 3**: Observabilidade (Prometheus + Grafana)
-- **Fase 4**: Alertas (Slack, Email, Webhooks)
-- **Fase 5**: Testes automatizados + CI/CD
+- **Fase 3**: Circuit Breaker + Retry Pattern + Observabilidade (Prometheus + Grafana)
+- **Fase 4**: API REST para consulta de histórico (MongoDB)
+- **Fase 5**: Alertas (Slack, Email, Webhooks)
+- **Fase 6**: Testes automatizados + CI/CD
 
 ---
 
@@ -57,28 +66,109 @@ Projeto educacional para estudo avançado de:
 ```
 api-watcher/
 ├── src/main/java/com/apiwatcher/
-│   ├── monitoring/              # Bounded Context: Monitoramento
-│   │   ├── domain/             # Camada de domínio (entidades, regras)
-│   │   │   ├── model/         # MonitoredApi, CheckResult
-│   │   │   └── repository/    # Interfaces de repositório
-│   │   ├── application/        # Casos de uso (orquestração)
-│   │   │   └── usecase/       # RegisterApi, ExecuteHealthCheck, TestAndRegister
-│   │   └── infrastructure/     # Adaptadores (HTTP, Persistência)
-│   │       ├── http/          # Controllers e DTOs
-│   │       └── persistence/   # JPA Entities e Repositories
-│   ├── scheduler/              # Agendamento de tarefas
-│   └── shared/                 # Código compartilhado
-│       ├── events/            # Event-driven (preparado para Kafka)
-│       └── exceptions/        # Tratamento global de erros
-├── docker/                     # Infraestrutura
+│   ├── config/                 # Configurações
+│   │   ├── KafkaProducerConfig.java
+│   │   └── KafkaConsumerConfig.java
+│   ├── monitoring/             # Bounded Context: Monitoramento
+│   │   ├── domain/            # Camada de domínio (entidades, regras)
+│   │   │   ├── model/        # MonitoredApi, CheckResult
+│   │   │   ├── events/       # Domain Events (Kafka)
+│   │   │   └── repository/   # Interfaces de repositório
+│   │   ├── application/       # Casos de uso (orquestração)
+│   │   │   └── usecase/      # RegisterApi, ExecuteHealthCheck, TestAndRegister
+│   │   └── infrastructure/    # Adaptadores (HTTP, Persistência, Messaging)
+│   │       ├── http/         # Controllers e DTOs
+│   │       ├── persistence/  # JPA Entities e Repositories (PostgreSQL)
+│   │       ├── messaging/    # Kafka Producer & Consumer
+│   │       └── timeseries/   # MongoDB Documents & Repositories
+│   ├── scheduler/             # Agendamento de tarefas
+│   └── shared/                # Código compartilhado
+│       ├── events/           # Event-driven interfaces
+│       └── exceptions/       # Tratamento global de erros
+├── docker/                    # Infraestrutura
 │   ├── docker-compose.yml
 │   ├── postgres/
+│   ├── kafka/
+│   ├── mongodb/
 │   ├── prometheus/
 │   └── grafana/
-└── docs/                       # Documentação
+└── docs/                      # Documentação
 ```
 
-**Arquitetura**: Clean Architecture + DDD com Bounded Contexts
+---
+
+## 🏗️ Arquitetura Implementada
+
+### Clean Architecture + DDD
+
+- ✅ **Clean Architecture** com separação clara de camadas
+- ✅ **Domain-Driven Design (DDD)** com Bounded Contexts
+- ✅ **Hexagonal Architecture** (Ports & Adapters)
+- ✅ **Repository Pattern** com abstração de persistência
+- ✅ **CQRS Pattern** (Command/Query separation)
+
+### Event-Driven Architecture
+
+- ✅ **Apache Kafka** como message broker
+- ✅ **Domain Events** publicados assincronamente
+- ✅ **Event Sourcing** parcial (histórico no MongoDB)
+- ✅ **Producer/Consumer Pattern**
+- ✅ **Event-driven communication** entre componentes
+
+### Padrões e Práticas
+
+- ✅ **Use Cases** para orquestração de lógica de negócio
+- ✅ **Value Objects** imutáveis (CheckResult)
+- ✅ **Domain Events** (ApiRegisteredEvent, HealthCheckEvent)
+- ✅ **DTO Pattern** para isolamento de camadas
+- ✅ **Validação em múltiplas camadas** (DTO + Domain)
+- ✅ **Async Processing** com Kafka
+
+### Stack Tecnológica
+
+- ✅ **Spring Boot 3.2** com Java 21
+- ✅ **PostgreSQL 16** (dados relacionais)
+- ✅ **MongoDB 7** (time-series / histórico)
+- ✅ **Apache Kafka** (mensageria)
+- ✅ **JPA/Hibernate** para persistência
+- ✅ **Docker Compose** para infraestrutura
+- ✅ **Scheduler** configurável
+- ✅ **Resilience4j** (preparado para Circuit Breaker)
+
+### Fluxo de Dados
+
+```
+┌─────────────────┐
+│   REST API      │
+│  (Controller)   │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐      ┌──────────────┐
+│   Use Cases     │─────▶│ PostgreSQL   │
+│  (Application)  │      │ (API Config) │
+└────────┬────────┘      └──────────────┘
+         │
+         ▼
+┌─────────────────┐
+│ Event Publisher │
+│     (Kafka)     │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐      ┌──────────────┐
+│ Event Consumer  │─────▶│   MongoDB    │
+│  (Kafka Listen) │      │  (History)   │
+└─────────────────┘      └──────────────┘
+```
+
+### Próximas Implementações
+
+- 🔄 Circuit Breaker + Retry nos health checks
+- 🔄 API REST para consulta de histórico
+- 🔄 Métricas com Prometheus + Grafana
+- 🔄 Distributed Tracing
+- 🔄 Alertas em tempo real
 
 ---
 
@@ -186,17 +276,48 @@ POST http://localhost:8080/api/monitoring/health-check
 
 ### Remover API
 
-````bash
+```bash
 DELETE http://localhost:8080/api/monitoring/apis/{id}
-```implementa:
+```
+
+### Consultar histórico no MongoDB
+
+```bash
+# Conectar ao MongoDB
+docker exec -it apiwatcher-mongo mongosh -u admin -p admin
+
+# Usar o banco de dados
+use apiwatcher
+
+# Ver APIs registradas
+db.api_registrations.find().pretty()
+
+# Ver últimos 5 health checks
+db.health_checks.find().sort({checkedAt: -1}).limit(5).pretty()
+
+# Ver health checks de uma API específica
+db.health_checks.find({apiName: "GitHub API"}).pretty()
+
+# Ver apenas falhas
+db.health_checks.find({success: false}).pretty()
+
+# Contar total de checks
+db.health_checks.countDocuments()
+```
+
+---
+
+## 🏗️ Arquitetura Implementada
 
 ### Arquitetura
+
 - ✅ **Clean Architecture** com separação clara de camadas
 - ✅ **Domain-Driven Design (DDD)** com Bounded Contexts
 - ✅ **Hexagonal Architecture** (Ports & Adapters)
 - ✅ **Repository Pattern** com abstração de persistência
 
 ### Padrões e Práticas
+
 - ✅ **Use Cases** para orquestração de lógica de negócio
 - ✅ **Value Objects** imutáveis (CheckResult)
 - ✅ **Domain Events** (preparado para Event-Driven)
@@ -204,6 +325,7 @@ DELETE http://localhost:8080/api/monitoring/apis/{id}
 - ✅ **Validação em múltiplas camadas** (DTO + Domain)
 
 ### Tecnologias
+
 - ✅ **Spring Boot 3.2** com Java 21
 - ✅ **JPA/Hibernate** para persistência
 - ✅ **PostgreSQL** para dados relacionais
@@ -211,11 +333,13 @@ DELETE http://localhost:8080/api/monitoring/apis/{id}
 - ✅ **Scheduler** configurável
 
 ### Próximas Implementações (Fase 2)
+
 - 🔄 Event-Driven Architecture com Kafka
 - 🔄 Time-Series Database (MongoDB)
 - 🔄 Circuit Breaker Pattern
 - 🔄 Distributed Tracing
 - 🔄
+
 ````
 
 API configurada: latencyThresholdMs = 511ms
@@ -249,9 +373,9 @@ O scheduler executa health check **a cada 60 segundos** (configurável):
 # src/main/resources/application.yml
 scheduler:
   health-check:
-    fixed-rate: 60000      # 60 segundos
-    initial-delay: 5000    # Aguarda 5s antes de começar
-````
+    fixed-rate: 60000 # 60 segundos
+    initial-delay: 5000 # Aguarda 5s antes de começar
+```
 
 ---
 

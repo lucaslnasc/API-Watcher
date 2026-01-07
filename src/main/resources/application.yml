@@ -44,6 +44,9 @@ spring:
       properties:
         spring.json.trusted.packages: "*"
       group-id: api-watcher-group
+    topics:
+      api-registered: api-registered
+      health-check: health-check
 
 management:
   endpoints:
@@ -73,9 +76,12 @@ resilience4j:
 
 logging:
   level:
-    com.apiwatcher: DEBUG
-    org.springframework.kafka: INFO
-    org.springframework.data.mongodb: DEBUG
+    com.apiwatcher: INFO
+    org.springframework.kafka: WARN
+    org.apache.kafka: WARN
+    org.springframework.data.mongodb: INFO
+    org.hibernate.SQL: INFO
+    org.hibernate.type: WARN
 
 # Configuração do Scheduler de Health Check
 scheduler:
