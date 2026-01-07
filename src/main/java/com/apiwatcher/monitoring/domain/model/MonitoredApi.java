@@ -5,6 +5,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 import com.apiwatcher.shared.exceptions.DomainException;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Entidade de domínio: API a ser monitorada.
@@ -21,6 +23,10 @@ public class MonitoredApi {
   private boolean active;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
+
+  // Construtor padrão (necessário para deserialização Jackson/Redis)
+  protected MonitoredApi() {
+  }
 
   // Construtor para criação
   public MonitoredApi(String name, String url, String httpMethod, Integer expectedStatusCode,
@@ -43,8 +49,17 @@ public class MonitoredApi {
   }
 
   // Construtor para reconstrução (repository)
-  public MonitoredApi(String id, String name, String url, String httpMethod, Integer expectedStatusCode,
-      Integer latencyThresholdMs, boolean active, LocalDateTime createdAt, LocalDateTime updatedAt) {
+  @JsonCreator
+  public MonitoredApi(
+      @JsonProperty("id") String id,
+      @JsonProperty("name") String name,
+      @JsonProperty("url") String url,
+      @JsonProperty("httpMethod") String httpMethod,
+      @JsonProperty("expectedStatusCode") Integer expectedStatusCode,
+      @JsonProperty("latencyThresholdMs") Integer latencyThresholdMs,
+      @JsonProperty("active") boolean active,
+      @JsonProperty("createdAt") LocalDateTime createdAt,
+      @JsonProperty("updatedAt") LocalDateTime updatedAt) {
     this.id = id;
     this.name = name;
     this.url = url;

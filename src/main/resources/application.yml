@@ -32,6 +32,21 @@ spring:
     redis:
       host: localhost
       port: 6379
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+          max-wait: -1ms
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000 # 10 minutos (padrão)
+      cache-null-values: false
+      use-key-prefix: true
+      key-prefix: "api-watcher:"
 
   kafka:
     bootstrap-servers: localhost:9092
@@ -77,9 +92,11 @@ resilience4j:
 logging:
   level:
     com.apiwatcher: INFO
+    com.apiwatcher.monitoring.infrastructure.persistence: DEBUG # Para ver cache hits/misses
     org.springframework.kafka: WARN
     org.apache.kafka: WARN
     org.springframework.data.mongodb: INFO
+    org.springframework.cache: DEBUG # Para debug de cache
     org.hibernate.SQL: INFO
     org.hibernate.type: WARN
 
